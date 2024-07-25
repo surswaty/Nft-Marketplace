@@ -30,14 +30,10 @@ contract MintNft is ERC721 {
         uint256 tokenId
     ) public view virtual override returns (string memory) {
         _requireOwned(tokenId);
-
         string memory baseURI = _baseURI();
         return
             bytes(baseURI).length > 0
                 ? string.concat(baseURI, tokenId.toString())
                 : "";
-    }
-    function sayHello() public pure returns (string memory) {
-        return "hello world";
     }
 }

@@ -1,0 +1,6 @@
+.secret
+cache/
+artifacts/
+deployments/
+/node_modules
+

@@ -45,11 +45,12 @@ function App() {
   const [mintTokenId, setMintTokenId] = useState();
   const [nftContractAddress, setNftContractAddress] = useState();
   const [tokenId, setTokenId] = useState();
-  const [price, setPrice] = useState();
-  const [showMintAlert, setShowMintAlert] = useState(false);
-  const [showListAlert, setShowListAlert] = useState(false);
+  const [price, setPrice] = useState(null);
+  // const [showSuccessAlert, setShowSucessAlert] = useState(false);
+  const [alertLocation, setAlertLocation] = useState('');
   const [alertText, setAlertText] = useState("");
-
+  const [approveTokenId, setApproveTokenId] = useState(null);
+  const [listTokenId, setListTokenId] = useState(null);
 
   // const nftContractAddress = useRef();
   // const tokenId = useRef();
@@ -103,9 +104,9 @@ function App() {
         const tx = await mintNftCon_rw.mint(mintTokenId);
         console.log('Result:', tx);
         setAlertText("Mint Successful");
-        setShowMintAlert(true);
+        setAlertLocation('mint');
         setTimeout(() => {
-          setShowMintAlert(false)
+          setAlertLocation('')
         }, 5000);
       } catch (err) {
         console.error("Error:", err);
@@ -116,36 +117,62 @@ function App() {
     }
   }
 
-  const list = async () => {
+  const approve = async () => {
     if (provider !== null) {
-      // const network = await provider.getNetwork();
-      // if (network.name !== 'goerli') {
-      //   alert(`Please change wallet to "goerli" chain first`);
+      //   const network = await provider.getNetwork();
+      //   if (network.name !== 'goerli') {
+      //     alert(`Please change wallet to "goerli" chain first`);
       // } else {
       try {
-        const tx = await nftMarketpaceCon_rw.list(nftContractAddress, tokenId, price);
-        console.log('Result:', tx);
-        setAlertText("List Successful");
-        setShowListAlert(true);
+        const tx = await mintNftCon_rw.approve(nftMarketpaceAddr, approveTokenId);
+        await tx.wait();
+        console.log("tx:", tx);
+        setAlertText("Approve Successful");
+        setAlertLocation('approve');
         setTimeout(() => {
-          setShowListAlert(false)
+          setAlertLocation('')
         }, 5000);
       } catch (err) {
         console.error("Error:", err);
       }
-      // }
     } else {
       alert(`Please connect the "wallet" first`);
     }
   };
+
+  const list = async () => {
+    if (provider !== null) {
+      //   const network = await provider.getNetwork();
+      //   if (network.name !== 'goerli') {
+      //     alert(`Please change wallet to "goerli" chain first`);
+      // } else {
+      try {
+        const tx = await nftMarketpaceCon_rw.list(mintNftAddress, listTokenId, price);
+        console.log("tx:", tx);
+        setAlertText("List Successful");
+        setAlertLocation('list');
+        setTimeout(() => {
+          setAlertLocation('');
+        }, 5000);
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    } else {
+      alert(`Please connect the "wallet" first`);
+    }
+  };
+
   const handleMintTokenId = (event) => {
     setMintTokenId(event.target.value); // Update the state with the new input value
   };
+  const HandleApproveTokenId = (event) => {
+    setApproveTokenId(event.target.value); // Update the state with the new input value
+  };
+  const handleListTokenId = (event) => {
+    setListTokenId(event.target.value); // Update the state with the new input value
+  };
   const handleNftAddress = (event) => {
     setNftContractAddress(event.target.value); // Update the state with the new input value
-  };
-  const handleTokenId = (event) => {
-    setTokenId(event.target.value); // Update the state with the new input value
   };
   const handlePrice = (event) => {
     setPrice(event.target.value); // Update the state with the new input value
@@ -187,13 +214,13 @@ function App() {
 
       <ButtonAppBar />
 
-      <div className='flex flex-col mt-32 ml-32 space-y-8 flex-wrap'>
+      <div className='flex flex-col mt-32 ml-32 space-y-14 flex-wrap'>
         <div className="bg-white p-4 flex rounded-lg w-96 flex-col space-y-3">
           <div className="text-black text-2xl flex" >
             <h2 className='flex-none'>Mint NFT</h2>
             <div className='flex-none mx-4'>
               {
-                showMintAlert ?
+                alertLocation == 'mint' ?
                   <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
                     {alertText}
                   </Alert> :
@@ -208,13 +235,12 @@ function App() {
             <Button type='submit' onClick={mint} variant="contained" >Mint</Button>
           </div>
         </div >
-
-        <div className="bg-white p-5 flex rounded-lg w-96 flex-col space-y-3">
+        <div className="bg-white p-4 flex rounded-lg w-96 flex-col space-y-3">
           <div className="text-black text-2xl flex" >
-            <h2 className='flex-none'>List NFT</h2>
+            <h2 className='flex-none'>Approve NFT</h2>
             <div className='flex-none mx-4'>
               {
-                showListAlert ?
+                alertLocation == 'approve' ?
                   <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
                     {alertText}
                   </Alert> :
@@ -223,18 +249,37 @@ function App() {
             </div>
           </div>
           <div >
-            <TextField type='text' value={nftContractAddress} onChange={handleNftAddress} id="outlined-basic" label="NFT Contract Address" variant="outlined" />
+            <TextField type='number' value={approveTokenId} onChange={HandleApproveTokenId} id="outlined-basic" label="Token ID" variant="outlined" />
           </div>
           <div>
-            <TextField type='number' value={tokenId} onChange={handleTokenId} id="outlined-basic" label="Token ID" variant="outlined" />
+            <Button type='submit' onClick={approve} variant="contained" >Approve</Button>
+          </div>
+        </div >
+
+        <div className="bg-white p-5 flex rounded-lg w-96 flex-col space-y-3">
+          <div className="text-black text-2xl flex" >
+            <h2 className='flex-none'>List NFT</h2>
+            <div className='flex-none mx-4'>
+              {
+                alertLocation == "list" ?
+                  <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
+                    {alertText}
+                  </Alert> :
+                  null
+              }
+            </div>
+          </div>
+          <div>
+            <TextField type='number' value={listTokenId} onChange={handleListTokenId} id="outlined-basic" label="Token ID" variant="outlined" />
           </div>
           <div>
             <TextField type='number' value={price} onChange={handlePrice} id="outlined-basic" label="Price" variant="outlined" />
           </div>
           <div>
-            <Button onClick={list} variant="contained" >List</Button>
+            <Button type='submit' onClick={list} variant="contained" >List</Button>
           </div>
         </div>
+
       </div>
 
     </div >

@@ -49,14 +49,13 @@ contract NftMarketplace {
         uint256 priceInWei
     ) public returns (bool) {
         require(
-            mintAddress.ownerOf(tokenId) == msg.sender ||
-                mintAddress.getApproved(tokenId) == msg.sender ||
+            mintAddress.getApproved(tokenId) == address(this) ||
                 mintAddress.isApprovedForAll(
                     mintAddress.ownerOf(tokenId),
-                    msg.sender
+                    address(this)
                 ) ==
                 true,
-            "Only the owner and operator can List"
+            "Token required to be approved first"
         );
         require(
             tokenListed[contractAddress][tokenId].isActive == false,
